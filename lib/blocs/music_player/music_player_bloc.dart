@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../core/errors/failures.dart';
 import '../../core/services/audio_player_service.dart';
-import '../../domain/entities/song_entity.dart';
 import '../../domain/usecases/get_local_songs.dart';
 import 'music_player_event.dart';
 import 'music_player_state.dart';

@@ -1,4 +1,6 @@
 // Eventos que el MusicPlayerBloc puede manejar
+import 'package:music_player/domain/entities/song_entity.dart';
+
 abstract class MusicPlayerEvent {
   const MusicPlayerEvent();
 }
