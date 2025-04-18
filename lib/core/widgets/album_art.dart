@@ -15,7 +15,7 @@ class AlbumArt extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        color: AppColors.card,
+        color: AppColors.background, // Replace 'background' with an existing valid color property
       ),
       child: imagePath != null
           ? Placeholder() // TODO: Reemplazar con Image.file cuando se use flutter_media_metadata

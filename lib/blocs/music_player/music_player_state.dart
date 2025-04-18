@@ -1,35 +1,28 @@
-import '../../domain/entities/song_entity.dart';
-
-// Estados posibles del reproductor de música
 abstract class MusicPlayerState {
   const MusicPlayerState();
 }
 
-// Estado inicial antes de cualquier acción
-class MusicPlayerInitial extends MusicPlayerState {
-  const MusicPlayerInitial();
-}
+class MusicPlayerInitial extends MusicPlayerState {}
 
-// Estado de carga mientras se obtienen las canciones
-class MusicPlayerLoading extends MusicPlayerState {
-  const MusicPlayerLoading();
-}
+class MusicPlayerLoading extends MusicPlayerState {}
 
-// Estado cuando las canciones están cargadas
 class MusicPlayerLoaded extends MusicPlayerState {
-  final List<SongEntity> songs;
-  final SongEntity? currentSong;
+  final List<Song> songs;
+  final int currentSongIndex;
   final bool isPlaying;
+  final double currentPosition;
+  final double totalDuration;
 
-  const MusicPlayerLoaded({
+  MusicPlayerLoaded({
     required this.songs,
-    this.currentSong,
-    this.isPlaying = false,
+    required this.currentSongIndex,
+    required this.isPlaying,
+    required this.currentPosition,
+    required this.totalDuration,
   });
 }
 
-// Estado de error con un mensaje
 class MusicPlayerError extends MusicPlayerState {
   final String message;
-  const MusicPlayerError({required this.message});
+  MusicPlayerError(this.message);
 }

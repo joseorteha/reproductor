@@ -1,87 +1,129 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio/just_audio.dart';
 import '../../core/services/audio_player_service.dart';
+import '../../domain/entities/song.dart';
 import '../../domain/usecases/get_local_songs.dart';
 import 'music_player_event.dart';
 import 'music_player_state.dart';
 
-// BLoC que maneja el estado del reproductor de música
-class MusicPlayerBloc {
+class MusicPlayerBloc extends Bloc<MusicPlayerEvent, MusicPlayerState> {
   final GetLocalSongs getLocalSongs;
   final AudioPlayerService audioPlayerService;
-  MusicPlayerState _state = const MusicPlayerInitial();
-  final ValueNotifier<MusicPlayerState> state = ValueNotifier(const MusicPlayerInitial());
-  final List<MusicPlayerEvent> _events = [];
+  List<Song> _songs = [];
+  int _currentSongIndex = 0;
+  double _currentPosition = 0.0;
 
   MusicPlayerBloc({
     required this.getLocalSongs,
     required this.audioPlayerService,
-  }) {
-    state.addListener(() => _state = state.value);
-    _processEvents();
-  }
+  }) : super(MusicPlayerInitial()) {
+    on<LoadLocalSongs>(_onLoadLocalSongs);
+    on<PlaySong>(_onPlaySong);
+    on<PauseSong>(_onPauseSong);
+    on<SkipNext>(_onSkipNext);
+    on<SkipPrevious>(_onSkipPrevious);
+    on<SeekSong>(_onSeekSong);
+    on<UpdatePosition>(_onUpdatePosition);
 
-  // Añade un evento al BLoC
-  void add(MusicPlayerEvent event) {
-    _events.add(event);
-    _processEvents();
-  }
+    // Escuchar cambios en la posición del audio
+    audioPlayerService.positionStream.listen((position) {
+      add(UpdatePosition(position.inSeconds.toDouble()));
+    });
 
-  // Procesa los eventos en cola
-  void _processEvents() async {
-    while (_events.isNotEmpty) {
-      final event = _events.removeAt(0);
-      if (event is LoadSongsEvent) {
-        await _onLoadSongs(event);
-      } else if (event is PlaySongEvent) {
-        await _onPlaySong(event);
-      } else if (event is PauseSongEvent) {
-        await _onPauseSong(event);
+    // Escuchar cambios en el estado de reproducción
+    audioPlayerService.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        add(SkipNext());
       }
-    }
+    });
   }
 
-  // Maneja el evento de cargar canciones
-  Future<void> _onLoadSongs(LoadSongsEvent event) async {
-    state.value = const MusicPlayerLoading();
+  Future<void> _onLoadLocalSongs(
+      LoadLocalSongs event, Emitter<MusicPlayerState> emit) async {
+    emit(MusicPlayerLoading());
     try {
-      final songs = await getLocalSongs();
-      state.value = MusicPlayerLoaded(songs: songs, currentSong: null);
+      _songs = event.songs;
+      _currentSongIndex = 0;
+      emit(MusicPlayerLoaded(
+        songs: _songs,
+        currentSongIndex: _currentSongIndex,
+        isPlaying: false,
+        currentPosition: 0.0,
+        totalDuration: 0.0,
+      ));
     } catch (e) {
-      state.value = MusicPlayerError(message: e.toString());
+      emit(MusicPlayerError('Failed to load songs: $e'));
     }
   }
 
-  // Maneja el evento de reproducir una canción
-  Future<void> _onPlaySong(PlaySongEvent event) async {
-    if (_state is MusicPlayerLoaded) {
-      final currentState = _state as MusicPlayerLoaded;
-      try {
-        await audioPlayerService.play(event.song.path);
-        state.value = MusicPlayerLoaded(
-          songs: currentState.songs,
-          currentSong: event.song,
-          isPlaying: true,
-        );
-      } catch (e) {
-        state.value = MusicPlayerError(message: 'Error al reproducir: $e');
+  Future<void> _onPlaySong(PlaySong event, Emitter<MusicPlayerState> emit) async {
+    try {
+      if (event.songIndex != null) {
+        _currentSongIndex = event.songIndex!;
       }
+      final song = _songs[_currentSongIndex];
+      await audioPlayerService.setAudioSource(song.path);
+      await audioPlayerService.play();
+      final duration = await audioPlayerService.getDuration();
+      emit(MusicPlayerLoaded(
+        songs: _songs,
+        currentSongIndex: _currentSongIndex,
+        isPlaying: true,
+        currentPosition: _currentPosition,
+        totalDuration: duration?.inSeconds.toDouble() ?? 0.0,
+      ));
+    } catch (e) {
+      emit(MusicPlayerError('Failed to play song: $e'));
     }
   }
 
-  // Maneja el evento de pausar una canción
-  Future<void> _onPauseSong(PauseSongEvent event) async {
-    if (_state is MusicPlayerLoaded) {
-      final currentState = _state as MusicPlayerLoaded;
-      try {
-        await audioPlayerService.pause();
-        state.value = MusicPlayerLoaded(
-          songs: currentState.songs,
-          currentSong: currentState.currentSong,
-          isPlaying: false,
-        );
-      } catch (e) {
-        state.value = MusicPlayerError(message: 'Error al pausar: $e');
-      }
+  Future<void> _onPauseSong(PauseSong event, Emitter<MusicPlayerState> emit) async {
+    await audioPlayerService.pause();
+    emit(MusicPlayerLoaded(
+      songs: _songs,
+      currentSongIndex: _currentSongIndex,
+      isPlaying: false,
+      currentPosition: _currentPosition,
+      totalDuration: state.totalDuration,
+    ));
+  }
+
+  Future<void> _onSkipNext(SkipNext event, Emitter<MusicPlayerState> emit) async {
+    if (_currentSongIndex < _songs.length - 1) {
+      _currentSongIndex++;
+      _currentPosition = 0.0;
+      add(PlaySong(songIndex: _currentSongIndex));
     }
+  }
+
+  Future<void> _onSkipPrevious(SkipPrevious event, Emitter<MusicPlayerState> emit) async {
+    if (_currentSongIndex > 0) {
+      _currentSongIndex--;
+      _currentPosition = 0.0;
+      add(PlaySong(songIndex: _currentSongIndex));
+    }
+  }
+
+  Future<void> _onSeekSong(SeekSong event, Emitter<MusicPlayerState> emit) async {
+    _currentPosition = event.position;
+    await audioPlayerService.seek(Duration(seconds: event.position.toInt()));
+    emit(MusicPlayerLoaded(
+      songs: _songs,
+      currentSongIndex: _currentSongIndex,
+      isPlaying: state.isPlaying,
+      currentPosition: _currentPosition,
+      totalDuration: state.totalDuration,
+    ));
+  }
+
+  void _onUpdatePosition(UpdatePosition event, Emitter<MusicPlayerState> emit) {
+    _currentPosition = event.position;
+    emit(MusicPlayerLoaded(
+      songs: _songs,
+      currentSongIndex: _currentSongIndex,
+      isPlaying: state.isPlaying,
+      currentPosition: _currentPosition,
+      totalDuration: state.totalDuration,
+    ));
   }
 }

@@ -1,22 +1,27 @@
-// Eventos que el MusicPlayerBloc puede manejar
-import 'package:music_player/domain/entities/song_entity.dart';
+abstract class MusicPlayerEvent {}
 
-abstract class MusicPlayerEvent {
-  const MusicPlayerEvent();
+class LoadLocalSongs extends MusicPlayerEvent {
+  final List<Song> songs;
+  LoadLocalSongs(this.songs);
 }
 
-// Evento para cargar canciones locales
-class LoadSongsEvent extends MusicPlayerEvent {
-  const LoadSongsEvent();
+class PlaySong extends MusicPlayerEvent {
+  final int? songIndex;
+  PlaySong({this.songIndex});
 }
 
-// Evento para reproducir una canción específica
-class PlaySongEvent extends MusicPlayerEvent {
-  final SongEntity song;
-  const PlaySongEvent(this.song);
+class PauseSong extends MusicPlayerEvent {}
+
+class SkipNext extends MusicPlayerEvent {}
+
+class SkipPrevious extends MusicPlayerEvent {}
+
+class SeekSong extends MusicPlayerEvent {
+  final double position;
+  SeekSong(this.position);
 }
 
-// Evento para pausar la reproducción
-class PauseSongEvent extends MusicPlayerEvent {
-  const PauseSongEvent();
+class UpdatePosition extends MusicPlayerEvent {
+  final double position;
+  UpdatePosition(this.position);
 }

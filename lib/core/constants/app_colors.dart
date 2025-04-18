@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
-// Constantes de colores para mantener consistencia en la UI
 class AppColors {
-  static const primary = Color(0xFF1DB954); // Verde vibrante
-  static const background = Color(0xFF121212); // Fondo oscuro
-  static const card = Color(0xFF282828); // Fondo de tarjetas
-  static const textPrimary = Colors.white;
-  static const textSecondary = Colors.grey;
+  static const primary = Color(0xFF7B1FA2); // Morado suave para pestañas
+  static const background = Colors.white;
+  static const cardBackground = Color(0xFFF5F5F5);
+  static const textPrimary = Colors.black87;
+  static const textSecondary = Colors.grey; // Gris más suave
+  static const miniPlayerGradient = LinearGradient(
+    colors: [
+      Color(0xFF42A5F5), // Azul claro
+      Color(0xFFAB47BC), // Morado
+    ],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
 }

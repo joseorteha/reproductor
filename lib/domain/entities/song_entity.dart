@@ -1,18 +1,15 @@
-// Entidad pura que representa una canción
-class SongEntity {
-  final String id;
+class Song {
   final String title;
   final String artist;
-  final String path;
-  final String? albumArt;
-  final Duration duration;
+  final String albumArtPath;
+  final String duration;
+  final String path; // Ruta del archivo local
 
-  SongEntity({
-    required this.id,
+  Song({
     required this.title,
     required this.artist,
-    required this.path,
-    this.albumArt,
+    required this.albumArtPath,
     required this.duration,
+    required this.path,
   });
 }

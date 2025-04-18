@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  palette_generator: ^0.3.3+6
+  flutter_bloc: ^8.1.6
+  just_audio: ^0.9.40  # Para reproducción de audio
+  file_picker: ^8.1.2  # Para seleccionar archivos locales
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +21,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/recently_played.jpg
+    - assets/images/most_played.jpg
+    - assets/images/playlist_01.jpg
+    - assets/images/playlist_02.jpg
+    - assets/images/playlist_03.jpg
+    - assets/images/track_placeholder.jpg
+    - assets/images/sunflower.jpg
+    - assets/images/blinding_lights.jpg
+    - assets/images/shape_of_you.jpg

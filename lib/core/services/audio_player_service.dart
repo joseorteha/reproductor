@@ -1,16 +1,28 @@
-// Servicio que simula la reproducción de audio (placeholder para just_audio)
+import 'package:just_audio/just_audio.dart';
+
 class AudioPlayerService {
-  // Simula la reproducción de una canción
-  Future<void> play(String path) async {
-    // TODO: Integrar con just_audio en el futuro
-    print('Simulando reproducción: $path');
-    await Future.delayed(const Duration(milliseconds: 500)); // Simular delay
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  Stream<Duration> get positionStream => _audioPlayer.positionStream;
+  Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
+
+  Future<void> setAudioSource(String path) async {
+    await _audioPlayer.setFilePath(path);
   }
 
-  // Simula pausar la reproducción
+  Future<void> play() async {
+    await _audioPlayer.play();
+  }
+
   Future<void> pause() async {
-    // TODO: Integrar con just_audio en el futuro
-    print('Simulando pausa');
-    await Future.delayed(const Duration(milliseconds: 500)); // Simular delay
+    await _audioPlayer.pause();
+  }
+
+  Future<void> seek(Duration position) async {
+    await _audioPlayer.seek(position);
+  }
+
+  Future<Duration?> getDuration() async {
+    return _audioPlayer.duration;
   }
 }
